@@ -75,7 +75,7 @@ app.post("/api/automate", async (req, res) => {
 
     try {
       await claude.messages.create({
-        model: "claude-haiku-4-5-20250929",
+        model: "claude-haiku-4-5-20251001",
         max_tokens: 10,
         messages: [{ role: "user", content: "hi" }],
       });
@@ -112,7 +112,7 @@ Reglas:
       send("iteration", { step: i + 1, max: MAX });
 
       const response = await claude.messages.create({
-        model: "claude-haiku-4-5-20250929",
+        model: "claude-haiku-4-5-20251001",
         max_tokens: 4096,
         system: systemPrompt,
         tools: anthropicTools,
