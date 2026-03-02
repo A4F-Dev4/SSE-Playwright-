@@ -3,172 +3,128 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Form Filler — Playwright MCP + Claude</title>
+  <title>Form Filler — Playwright MCP</title>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0a0f;
-      --surface: #12121a;
-      --surface-2: #1a1a26;
-      --border: #2a2a3a;
-      --border-glow: #4f46e5;
-      --text: #e4e4ef;
-      --text-dim: #8888a0;
-      --accent: #6366f1;
-      --accent-light: #818cf8;
-      --green: #22c55e;
-      --orange: #f59e0b;
-      --red: #ef4444;
-      --cyan: #06b6d4;
+      --bg: #0a0a0f; --surface: #12121a; --surface-2: #1a1a26;
+      --border: #2a2a3a; --border-glow: #4f46e5; --text: #e4e4ef;
+      --text-dim: #8888a0; --accent: #6366f1; --accent-light: #818cf8;
+      --green: #22c55e; --orange: #f59e0b; --red: #ef4444; --cyan: #06b6d4;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Outfit', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
+    body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
     body::before {
-      content: '';
-      position: fixed;
-      top: -50%; left: -50%;
-      width: 200%; height: 200%;
+      content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
       background: radial-gradient(ellipse at 30% 20%, rgba(99,102,241,0.06) 0%, transparent 50%),
                   radial-gradient(ellipse at 70% 80%, rgba(6,182,212,0.04) 0%, transparent 50%);
       z-index: 0; pointer-events: none;
     }
-    .container {
-      position: relative; z-index: 1;
-      max-width: 800px; margin: 0 auto; padding: 40px 24px;
-    }
-    header { text-align: center; margin-bottom: 48px; }
-    .logo { display: inline-flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .container { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+    header { text-align: center; margin-bottom: 40px; }
     .logo-icon {
-      width: 48px; height: 48px;
+      width: 48px; height: 48px; margin: 0 auto 12px;
       background: linear-gradient(135deg, var(--accent), var(--cyan));
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
       font-size: 24px; box-shadow: 0 0 30px rgba(99,102,241,0.3);
     }
     h1 {
-      font-size: 28px; font-weight: 700; letter-spacing: -0.5px;
-      background: linear-gradient(135deg, var(--text) 0%, var(--accent-light) 100%);
+      font-size: 26px; font-weight: 700;
+      background: linear-gradient(135deg, var(--text), var(--accent-light));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-    .subtitle { color: var(--text-dim); font-size: 15px; margin-top: 8px; font-weight: 300; }
+    .subtitle { color: var(--text-dim); font-size: 14px; margin-top: 6px; }
     .card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 32px; margin-bottom: 24px; transition: border-color 0.3s;
+      border-radius: 16px; padding: 28px; margin-bottom: 20px;
     }
-    .card:focus-within { border-color: var(--border-glow); box-shadow: 0 0 40px rgba(99,102,241,0.08); }
-    .field { margin-bottom: 24px; }
+    .card:focus-within { border-color: var(--border-glow); }
+    .field { margin-bottom: 20px; }
     .field:last-child { margin-bottom: 0; }
-    label {
-      display: block; font-size: 13px; font-weight: 600;
-      color: var(--text-dim); text-transform: uppercase;
-      letter-spacing: 1px; margin-bottom: 8px;
+    label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    input, textarea, select {
+      width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      color: var(--text); outline: none; transition: all 0.2s;
     }
-    input, textarea {
-      width: 100%; background: var(--surface-2);
-      border: 1px solid var(--border); border-radius: 10px;
-      padding: 14px 16px; font-family: 'JetBrains Mono', monospace;
-      font-size: 14px; color: var(--text); transition: all 0.2s; outline: none;
-    }
-    input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
     input::placeholder, textarea::placeholder { color: #555568; }
-    textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
-    .toggle-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
-    .toggle { position: relative; width: 44px; height: 24px; cursor: pointer; }
-    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-    .toggle-track {
-      position: absolute; inset: 0; background: var(--surface-2);
-      border: 1px solid var(--border); border-radius: 12px; transition: all 0.3s;
-    }
-    .toggle-thumb {
-      position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
-      background: var(--text-dim); border-radius: 50%; transition: all 0.3s;
-    }
-    .toggle input:checked ~ .toggle-track { background: var(--accent); border-color: var(--accent); }
-    .toggle input:checked ~ .toggle-thumb { left: 23px; background: white; }
-    .toggle-label { font-size: 13px; color: var(--text-dim); }
+    textarea { resize: vertical; min-height: 70px; line-height: 1.6; }
+    select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238888a0'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+    select option { background: var(--surface-2); color: var(--text); }
+    .row2 { display: grid; grid-template-columns: 1fr 180px; gap: 12px; }
     .btn {
-      width: 100%; padding: 16px; font-family: 'Outfit', sans-serif;
-      font-size: 16px; font-weight: 600; border: none; border-radius: 12px;
-      cursor: pointer; transition: all 0.3s;
+      width: 100%; padding: 14px; font-family: 'Outfit', sans-serif; font-size: 15px;
+      font-weight: 600; border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s;
     }
-    .btn-primary {
-      background: linear-gradient(135deg, var(--accent), #4f46e5); color: white;
-      box-shadow: 0 4px 20px rgba(99,102,241,0.3);
-    }
-    .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 30px rgba(99,102,241,0.4); }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), #4f46e5); color: white; box-shadow: 0 4px 20px rgba(99,102,241,0.3); }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-1px); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-running {
-      background: linear-gradient(135deg, var(--orange), #d97706); color: white;
-      box-shadow: 0 4px 20px rgba(245,158,11,0.3);
-    }
-    .terminal {
+    .btn-running { background: linear-gradient(135deg, var(--orange), #d97706); color: white; }
+
+    /* ─── Layout: terminal + preview side by side ─── */
+    .output-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+    @media (max-width: 768px) { .output-grid { grid-template-columns: 1fr; } .row2 { grid-template-columns: 1fr; } }
+
+    .terminal, .preview-panel {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 16px; overflow: hidden; display: none;
     }
-    .terminal.active { display: block; animation: slideUp 0.4s ease; }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .terminal-header {
+    .terminal.active, .preview-panel.active { display: block; animation: slideUp 0.4s ease; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+    .panel-header {
       display: flex; align-items: center; gap: 10px;
-      padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--surface-2);
+      padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2);
     }
-    .terminal-dots { display: flex; gap: 6px; }
-    .terminal-dots span { width: 10px; height: 10px; border-radius: 50%; }
-    .dot-red { background: #ef4444; } .dot-yellow { background: #f59e0b; } .dot-green { background: #22c55e; }
-    .terminal-title { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-dim); flex: 1; text-align: center; }
+    .panel-dots { display: flex; gap: 5px; }
+    .panel-dots span { width: 9px; height: 9px; border-radius: 50%; }
+    .dot-r { background: #ef4444; } .dot-y { background: #f59e0b; } .dot-g { background: #22c55e; }
+    .panel-title { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); flex: 1; text-align: center; }
+
     .terminal-body {
-      padding: 20px; max-height: 500px; overflow-y: auto;
-      font-family: 'JetBrains Mono', monospace; font-size: 13px;
-      line-height: 1.8; scroll-behavior: smooth;
+      padding: 16px; max-height: 450px; overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.7;
     }
-    .terminal-body::-webkit-scrollbar { width: 6px; }
-    .terminal-body::-webkit-scrollbar-track { background: transparent; }
+    .terminal-body::-webkit-scrollbar { width: 5px; }
     .terminal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-    .log-line { padding: 2px 0; animation: fadeIn 0.3s ease; word-break: break-word; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
-    .log-status { color: var(--cyan); }
-    .log-claude { color: var(--accent-light); }
-    .log-tool { color: var(--orange); }
-    .log-result { color: var(--text-dim); font-size: 12px; }
-    .log-error { color: var(--red); }
-    .log-done { color: var(--green); font-weight: 600; }
-    .log-iteration { color: #555568; font-size: 11px; }
+
+    .preview-body {
+      padding: 12px; min-height: 200px; max-height: 450px; overflow-y: auto;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .preview-body img {
+      max-width: 100%; border-radius: 8px; border: 1px solid var(--border);
+      transition: opacity 0.3s;
+    }
+    .preview-placeholder { color: #444; font-size: 13px; text-align: center; padding: 40px; }
+    .preview-placeholder span { font-size: 32px; display: block; margin-bottom: 8px; }
+
+    .log-line { padding: 1px 0; animation: fadeIn 0.2s ease; word-break: break-word; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .log-status { color: var(--cyan); } .log-claude { color: var(--accent-light); }
+    .log-tool { color: var(--orange); } .log-result { color: var(--text-dim); font-size: 11px; }
+    .log-error { color: var(--red); } .log-done { color: var(--green); font-weight: 600; }
+    .log-iteration { color: #444; font-size: 10px; }
+
     .status-badge {
-      display: none; align-items: center; gap: 8px;
-      padding: 10px 16px; border-radius: 10px; font-size: 13px;
-      font-weight: 500; margin-bottom: 20px;
+      display: none; align-items: center; gap: 8px; padding: 8px 14px;
+      border-radius: 10px; font-size: 13px; font-weight: 500; margin-bottom: 16px;
     }
     .status-badge.running { display: flex; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); color: var(--accent-light); }
     .status-badge.success { display: flex; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); color: var(--green); }
     .status-badge.error { display: flex; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: var(--red); }
-    .spinner {
-      display: inline-block; width: 14px; height: 14px;
-      border: 2px solid var(--accent); border-top-color: transparent;
-      border-radius: 50%; animation: spin 0.8s linear infinite;
-    }
+    .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .prereq {
-      background: var(--surface-2); border: 1px solid var(--border);
-      border-radius: 10px; padding: 16px 20px; margin-bottom: 24px;
-      font-size: 13px; color: var(--text-dim); line-height: 1.7;
-    }
-    .prereq code {
-      background: var(--bg); padding: 2px 8px; border-radius: 4px;
-      font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--cyan);
-    }
-    @media (max-width: 600px) { .container { padding: 24px 16px; } .card { padding: 24px 20px; } h1 { font-size: 22px; } }
+    .provider-hint { font-size: 11px; color: #555; margin-top: 4px; }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <div class="logo"><div class="logo-icon">🎭</div></div>
+      <div class="logo-icon">🎭</div>
       <h1>Playwright Form Filler</h1>
-      <p class="subtitle">Automatiza formularios con Claude Haiku + Playwright MCP</p>
+      <p class="subtitle">Automatiza formularios con IA + Playwright MCP</p>
     </header>
 
     <div class="status-badge" id="statusBadge"></div>
@@ -180,19 +136,22 @@
       </div>
       <div class="field">
         <label>📝 Instrucciones</label>
-        <textarea id="instructions" placeholder="Llena el campo nombre con 'Juan García', email con 'juan@mail.com', selecciona país 'México', marca términos y envía."></textarea>
+        <textarea id="instructions" placeholder="Llena nombre: Juan García, email: juan@mail.com, selecciona país México, marca términos y envía."></textarea>
       </div>
-      <div class="field">
-        <label>🔑 API Key de Anthropic</label>
-        <input type="password" id="apiKey" placeholder="sk-ant-..." />
-      </div>
-      <div class="toggle-row">
-        <label class="toggle">
-          <input type="checkbox" id="headless" checked>
-          <div class="toggle-track"></div>
-          <div class="toggle-thumb"></div>
-        </label>
-        <span class="toggle-label">Modo headless (sin ventana visible)</span>
+      <div class="row2">
+        <div class="field">
+          <label>🔑 API Key</label>
+          <input type="password" id="apiKey" placeholder="sk-..." />
+        </div>
+        <div class="field">
+          <label>🧠 Proveedor</label>
+          <select id="provider">
+            <option value="anthropic">Claude Haiku</option>
+            <option value="openai">OpenAI GPT-4o</option>
+            <option value="groq">Groq Llama 3.3</option>
+          </select>
+          <div class="provider-hint" id="providerHint">Key: sk-ant-...</div>
+        </div>
       </div>
     </div>
 
@@ -200,175 +159,130 @@
       🚀 Iniciar automatización
     </button>
 
-    <div class="terminal" id="terminal" style="margin-top: 24px;">
-      <div class="terminal-header">
-        <div class="terminal-dots">
-          <span class="dot-red"></span>
-          <span class="dot-yellow"></span>
-          <span class="dot-green"></span>
+    <div class="output-grid" id="outputGrid">
+      <div class="terminal" id="terminal">
+        <div class="panel-header">
+          <div class="panel-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+          <span class="panel-title">logs</span>
         </div>
-        <span class="terminal-title">playwright-mcp — claude-haiku-4.5</span>
+        <div class="terminal-body" id="logs"></div>
       </div>
-      <div class="terminal-body" id="logs"></div>
+      <div class="preview-panel" id="preview">
+        <div class="panel-header">
+          <div class="panel-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+          <span class="panel-title">🖥️ vista del navegador</span>
+        </div>
+        <div class="preview-body" id="previewBody">
+          <div class="preview-placeholder">
+            <span>🖥️</span>
+            Los screenshots aparecerán aquí
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
+    var providerSelect = document.getElementById('provider');
+    var providerHint = document.getElementById('providerHint');
+    var hints = { anthropic: 'Key: sk-ant-...', openai: 'Key: sk-...', groq: 'Key: gsk_...' };
+    providerSelect.addEventListener('change', function() { providerHint.textContent = hints[this.value] || ''; });
+
     var apiKeyInput = document.getElementById('apiKey');
-    try {
-      var saved = sessionStorage.getItem('anthropic_key');
-      if (saved) apiKeyInput.value = saved;
-    } catch(e) {}
-    apiKeyInput.addEventListener('input', function() {
-      try { sessionStorage.setItem('anthropic_key', apiKeyInput.value); } catch(e) {}
-    });
+    try { var s = sessionStorage.getItem('ak'); if (s) apiKeyInput.value = s; } catch(e) {}
+    apiKeyInput.addEventListener('input', function() { try { sessionStorage.setItem('ak', this.value); } catch(e) {} });
 
     var isRunning = false;
 
     function addLog(cls, text) {
-      var logs = document.getElementById('logs');
-      var line = document.createElement('div');
-      line.className = 'log-line ' + cls;
-      line.textContent = text;
-      logs.appendChild(line);
-      logs.scrollTop = logs.scrollHeight;
+      var el = document.getElementById('logs');
+      var d = document.createElement('div');
+      d.className = 'log-line ' + cls;
+      d.textContent = text;
+      el.appendChild(d);
+      el.scrollTop = el.scrollHeight;
     }
 
     function setStatus(type, text) {
-      var badge = document.getElementById('statusBadge');
-      badge.className = 'status-badge ' + type;
-      if (type === 'running') {
-        badge.innerHTML = '<span class="spinner"></span><span>' + text + '</span>';
-      } else {
-        var icon = type === 'success' ? '✅' : '❌';
-        badge.innerHTML = '<span>' + icon + '</span><span>' + text + '</span>';
-      }
+      var b = document.getElementById('statusBadge');
+      b.className = 'status-badge ' + type;
+      b.innerHTML = type === 'running'
+        ? '<span class="spinner"></span><span>' + text + '</span>'
+        : '<span>' + (type === 'success' ? '✅' : '❌') + '</span><span>' + text + '</span>';
+    }
+
+    function updatePreview(base64) {
+      var body = document.getElementById('previewBody');
+      body.innerHTML = '<img src="data:image/png;base64,' + base64 + '" alt="Screenshot" />';
     }
 
     function startAutomation() {
       if (isRunning) return;
-
       var url = document.getElementById('url').value.trim();
       var instructions = document.getElementById('instructions').value.trim();
       var apiKey = document.getElementById('apiKey').value.trim();
-      var headless = document.getElementById('headless').checked;
+      var provider = document.getElementById('provider').value;
 
-      if (!url || !instructions || !apiKey) {
-        alert('Completa todos los campos');
-        return;
-      }
+      if (!url || !instructions || !apiKey) { alert('Completa todos los campos'); return; }
 
       isRunning = true;
       var btn = document.getElementById('startBtn');
-      btn.disabled = true;
-      btn.textContent = '⏳ Ejecutando...';
-      btn.className = 'btn btn-running';
+      btn.disabled = true; btn.textContent = '⏳ Ejecutando...'; btn.className = 'btn btn-running';
 
-      var terminal = document.getElementById('terminal');
-      terminal.classList.add('active');
+      document.getElementById('terminal').classList.add('active');
+      document.getElementById('preview').classList.add('active');
       document.getElementById('logs').innerHTML = '';
+      document.getElementById('previewBody').innerHTML = '<div class="preview-placeholder"><span>⏳</span>Esperando primer screenshot...</div>';
 
       setStatus('running', 'Conectando...');
-      addLog('log-status', '▶ Iniciando conexión con el servidor...');
+      addLog('log-status', '▶ Iniciando...');
 
-      // Use XMLHttpRequest for SSE-like streaming (avoids AbortSignal issues)
       var xhr = new XMLHttpRequest();
       xhr.open('POST', '/api/automate', true);
       xhr.setRequestHeader('Content-Type', 'application/json');
-
-      var lastIndex = 0;
+      var lastIdx = 0;
 
       xhr.onprogress = function() {
-        var newData = xhr.responseText.substring(lastIndex);
-        lastIndex = xhr.responseText.length;
-
-        var lines = newData.split('\n');
-        for (var i = 0; i < lines.length; i++) {
-          var line = lines[i].trim();
-          if (!line.startsWith('data: ')) continue;
-          try {
-            var event = JSON.parse(line.substring(6));
-            handleEvent(event);
-          } catch(e) {}
-        }
+        processChunk(xhr.responseText.substring(lastIdx));
+        lastIdx = xhr.responseText.length;
       };
-
       xhr.onload = function() {
-        // Process any remaining data
-        var remaining = xhr.responseText.substring(lastIndex);
-        var lines = remaining.split('\n');
+        processChunk(xhr.responseText.substring(lastIdx));
+        finish();
+      };
+      xhr.onerror = function() { addLog('log-error', '❌ Error de conexión'); setStatus('error', 'Error'); finish(); };
+      xhr.timeout = 300000;
+      xhr.ontimeout = function() { addLog('log-error', '❌ Timeout'); setStatus('error', 'Timeout'); finish(); };
+
+      xhr.send(JSON.stringify({ url: url, instructions: instructions, apiKey: apiKey, provider: provider }));
+
+      function processChunk(chunk) {
+        var lines = chunk.split('\n');
         for (var i = 0; i < lines.length; i++) {
-          var line = lines[i].trim();
-          if (!line.startsWith('data: ')) continue;
-          try {
-            var event = JSON.parse(line.substring(6));
-            handleEvent(event);
-          } catch(e) {}
+          var l = lines[i].trim();
+          if (!l.startsWith('data: ')) continue;
+          try { handleEvent(JSON.parse(l.substring(6))); } catch(e) {}
         }
-        finish();
-      };
-
-      xhr.onerror = function() {
-        addLog('log-error', '❌ Error de conexión con el servidor');
-        setStatus('error', 'Error de conexión');
-        finish();
-      };
-
-      xhr.ontimeout = function() {
-        addLog('log-error', '❌ Timeout de conexión');
-        setStatus('error', 'Timeout');
-        finish();
-      };
-
-      xhr.timeout = 300000; // 5 min timeout
-
-      xhr.send(JSON.stringify({ url: url, instructions: instructions, apiKey: apiKey, headless: headless }));
-
+      }
       function finish() {
-        isRunning = false;
-        btn.disabled = false;
-        btn.textContent = '🚀 Iniciar automatización';
-        btn.className = 'btn btn-primary';
+        isRunning = false; btn.disabled = false;
+        btn.textContent = '🚀 Iniciar automatización'; btn.className = 'btn btn-primary';
       }
     }
 
     function handleEvent(e) {
       switch (e.type) {
-        case 'status':
-          addLog('log-status', '⚡ ' + e.message);
-          setStatus('running', e.message);
-          break;
-        case 'start':
-          addLog('log-status', '🔗 URL: ' + e.url);
-          addLog('log-status', '📝 ' + e.instructions);
-          setStatus('running', 'Automatizando formulario...');
-          break;
-        case 'iteration':
-          addLog('log-iteration', '── paso ' + e.step + '/' + e.max + ' ──');
-          break;
-        case 'claude':
-          addLog('log-claude', '🤖 ' + e.message);
-          break;
-        case 'tool_call':
-          addLog('log-tool', '🔧 ' + e.name);
-          break;
-        case 'tool_result':
-          addLog('log-result', '   ✓ ' + e.result);
-          break;
-        case 'tool_error':
-          addLog('log-error', '   ✗ ' + e.name + ': ' + e.error);
-          break;
-        case 'done':
-          addLog('log-done', '\n' + e.message);
-          setStatus('success', e.message);
-          break;
-        case 'error':
-          addLog('log-error', '❌ ' + e.message);
-          setStatus('error', e.message);
-          break;
-        case 'end':
-          addLog('log-status', '👋 Sesión finalizada.');
-          break;
+        case 'status': addLog('log-status', '⚡ ' + e.message); setStatus('running', e.message); break;
+        case 'start': addLog('log-status', '🔗 ' + e.url); addLog('log-status', '📝 ' + e.instructions); setStatus('running', 'Automatizando...'); break;
+        case 'iteration': addLog('log-iteration', '── paso ' + e.step + '/' + e.max + ' ──'); break;
+        case 'claude': addLog('log-claude', '🤖 ' + e.message); break;
+        case 'tool_call': addLog('log-tool', '🔧 ' + e.name); break;
+        case 'tool_result': addLog('log-result', '  ✓ ' + e.result); break;
+        case 'tool_error': addLog('log-error', '  ✗ ' + e.name + ': ' + e.error); break;
+        case 'screenshot': updatePreview(e.data); addLog('log-status', '📸 Screenshot actualizado'); break;
+        case 'done': addLog('log-done', '\n' + e.message); setStatus('success', e.message); break;
+        case 'error': addLog('log-error', '❌ ' + e.message); setStatus('error', e.message); break;
+        case 'end': addLog('log-status', '👋 Fin.'); break;
       }
     }
   </script>
