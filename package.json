@@ -1,0 +1,15 @@
+{
+  "name": "playwright-form-filler-web",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "setup": "npm install && npx playwright install chromium"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@playwright/mcp": "^0.0.28",
+    "express": "^4.21.0"
+  }
+}
