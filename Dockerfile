@@ -2,7 +2,7 @@ FROM node:20-slim
 
 # Playwright install --with-deps instala Chromium + TODAS las libs del sistema automáticamente
 # Esto es más confiable que listar paquetes manualmente
-RUN npx playwright install --with-deps chromium
+RUN npx playwright install --with-deps chrome
 
 WORKDIR /app
 
